@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"io"
+	"encoding/gob"
 	"net"
+
+	"github.com/hsnprsd/migmig/common"
 )
 
 func main() {
@@ -12,9 +13,13 @@ func main() {
 		panic(err)
 	}
 
-	message, err := io.ReadAll(conn)
+	request := &common.Request{
+		Addr: "google.com",
+		Port: 443,
+	}
+
+	err = gob.NewEncoder(conn).Encode(request)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(message))
 }
