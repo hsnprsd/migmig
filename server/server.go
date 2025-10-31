@@ -1,7 +1,8 @@
 package main
 
 import (
-	"encoding/gob"
+	"fmt"
+	"io"
 	"log"
 	"net"
 
@@ -10,13 +11,37 @@ import (
 
 func serveConn(conn net.Conn) {
 	defer conn.Close()
+	defer log.Printf("client disconnected: %s\n", conn.RemoteAddr().String())
 
 	request := new(common.Request)
-	err := gob.NewDecoder(conn).Decode(request)
+	err := request.ReadFrom(conn)
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("request from %s -> %s:%d\n", conn.LocalAddr().String(), request.Addr, request.Port)
+
+	log.Printf("request from %s -> %s:%d\n", conn.RemoteAddr().String(), request.Addr, request.Port)
+
+	remoteConn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", request.Addr, request.Port))
+	if err != nil {
+		panic(err)
+	}
+	defer remoteConn.Close()
+
+	closed := make(chan struct{}, 2)
+	go func() {
+		defer log.Println("client conn closed")
+		io.Copy(remoteConn, conn)
+		closed <- struct{}{}
+	}()
+	go func() {
+		defer log.Println("remote conn closed")
+		io.Copy(conn, remoteConn)
+		closed <- struct{}{}
+	}()
+
+	<-closed
+	remoteConn.Close()
+	conn.Close()
 }
 
 func main() {
