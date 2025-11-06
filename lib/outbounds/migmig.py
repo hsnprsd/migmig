@@ -1,14 +1,29 @@
 import asyncio
+import ssl
+from typing import Optional
 
 from lib.http import read_http_response_header
 from lib.outbounds.outbound import Outbound
 from lib.proxy import ConnectionRequest, forward
+from lib.tls import ClientTLSConfig
 
 
 class MigmigOutbound(Outbound):
-    def __init__(self, server_host: str, server_port: int) -> None:
+    def __init__(
+        self,
+        server_host: str,
+        server_port: int,
+        tls: Optional[ClientTLSConfig] = None,
+    ) -> None:
         self.server_host = server_host
         self.server_port = server_port
+        self.ssl_context = None
+
+        if tls:
+            self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            if not tls.verify:
+                self.ssl_context.check_hostname = False
+                self.ssl_context.verify_mode = ssl.CERT_NONE
 
     async def outbound(
         self,
@@ -23,7 +38,9 @@ class MigmigOutbound(Outbound):
         )
 
         remote_reader, remote_writer = await asyncio.open_connection(
-            self.server_host, self.server_port
+            self.server_host,
+            self.server_port,
+            ssl=self.ssl_context,
         )
 
         remote_writer.write(
