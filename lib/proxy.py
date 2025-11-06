@@ -15,11 +15,11 @@ class ConnectionRequest:
         )
 
     @staticmethod
-    def from_bytes(bytes: bytes) -> "ConnectionRequest":
-        host_len = bytes[0]
-        host = bytes[1 : 1 + host_len].decode("utf-8")
-        port = struct.unpack("H", bytes[1 + host_len :])[0]
-        return ConnectionRequest(host=host, port=port)
+    async def read_from(reader: asyncio.StreamReader) -> "ConnectionRequest":
+        host_len = await reader.readexactly(1)
+        host = await reader.readexactly(host_len[0])
+        port = struct.unpack("H", await reader.readexactly(2))[0]
+        return ConnectionRequest(host=host.decode("utf-8"), port=port)
 
 
 async def forward(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:

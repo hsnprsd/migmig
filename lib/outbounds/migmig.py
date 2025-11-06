@@ -32,14 +32,11 @@ class MigmigOutbound(Outbound):
         remote_writer.write(connection_request.to_bytes())
         await remote_writer.drain()
 
-        response_header, response_body = await read_http_response_header(remote_reader)
+        response_header = await read_http_response_header(remote_reader)
         if response_header.status != "200 OK":
             writer.close()
             await writer.wait_closed()
             return
-
-        writer.write(response_body)
-        await writer.drain()
 
         await asyncio.gather(
             forward(reader, remote_writer),

@@ -24,9 +24,9 @@ class MigmigInbound(Inbound):
     ) -> None:
         print("migmig inbound connection from:", writer.get_extra_info("peername"))
 
-        _, request_body = await read_http_request_header(reader)
+        await read_http_request_header(reader)
 
-        connection_request = ConnectionRequest.from_bytes(request_body)
+        connection_request = await ConnectionRequest.read_from(reader)
 
         writer.write(b"HTTP/1.1 200 OK\r\n\r\n")
         await writer.drain()
