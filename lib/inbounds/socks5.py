@@ -79,7 +79,7 @@ class Socks5Inbound:
             addr = socket.inet_ntop(socket.AF_INET, addr)
         elif addr_type == ADDR_TYPE_DOMAIN:
             addr_len = await reader.readexactly(1)
-            addr = await reader.readexactly(addr_len)
+            addr = await reader.readexactly(addr_len[0])
             port = await reader.readexactly(2)
             addr = addr.decode("utf-8")
         elif addr_type == ADDR_TYPE_IPV6:
