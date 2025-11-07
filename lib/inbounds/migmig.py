@@ -48,11 +48,15 @@ class MigmigInbound(Inbound):
     ) -> None:
         print("migmig inbound connection from:", writer.get_extra_info("peername"))
 
+        print("migmig inbound: reading request header")
         await read_http_request_header(reader)
 
+        print("migmig inbound: reading connection request")
         connection_request = await ConnectionRequest.read_from(reader)
 
+        print("migmig inbound: writing response header")
         writer.write(b"HTTP/1.1 200 OK\r\n\r\n")
         await writer.drain()
 
+        print("migmig inbound: forwarding to outbound")
         await self.outbound.outbound(reader, writer, connection_request)
