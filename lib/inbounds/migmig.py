@@ -49,10 +49,12 @@ class MigmigInbound(Inbound):
         print("migmig inbound connection from:", writer.get_extra_info("peername"))
 
         print("migmig inbound: reading request header")
-        await read_http_request_header(reader)
+        request_header = await read_http_request_header(reader)
+        print("migmig inbound: request header read", request_header)
 
         print("migmig inbound: reading connection request")
         connection_request = await ConnectionRequest.read_from(reader)
+        print("migmig inbound: connection request read", connection_request)
 
         print("migmig inbound: writing response header")
         writer.write(b"HTTP/1.1 200 OK\r\n\r\n")
