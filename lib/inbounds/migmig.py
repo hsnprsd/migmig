@@ -53,7 +53,9 @@ class MigmigInbound(Inbound):
         print("migmig inbound: request header read", request_header)
 
         print("migmig inbound: writing response header")
-        writer.write(b"HTTP/1.1 200 OK\r\n\r\n")
+        writer.write(
+            b"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nTransfer-Encoding: chunked\r\n\r\n"
+        )
         await writer.drain()
 
         print("migmig inbound: reading connection request")
